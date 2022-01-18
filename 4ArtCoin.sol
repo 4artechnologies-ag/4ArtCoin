@@ -1,9 +1,8 @@
 /**
- * 4art ERC20 StandardToken
- * Author: scalify.it
- * */
+ *Submitted for verification at Etherscan.io on 2020-06-12
+*/
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.17;
 
 /**
  * @title SafeMath
@@ -43,6 +42,7 @@ library SafeMath {
 contract ERC20Basic {
     uint256 public totalSupply;
     function balanceOf(address who) public view returns (uint256);
+    function transfer(address to, uint256 value) public returns (bool);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event DelegatedTransfer(address indexed from, address indexed to, address indexed delegate, uint256 value, uint256 fee);
 }
@@ -63,6 +63,7 @@ contract BasicToken is ERC20Basic {
     function balanceOf(address _owner) public view returns (uint256 balance) {
         return balances[_owner];
     }
+
 }
 
 /**
@@ -89,7 +90,6 @@ contract StandardToken is ERC20, BasicToken {
 
     /**
      * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
-     *
      * Beware that changing an allowance with this method brings the risk that someone may use both the old
      * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
      * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
@@ -99,7 +99,7 @@ contract StandardToken is ERC20, BasicToken {
      */
     function approve(address _spender, uint256 _value) public returns (bool) {
         allowed[msg.sender][_spender] = _value;
-        Approval(msg.sender, _spender, _value);
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
@@ -121,7 +121,7 @@ contract StandardToken is ERC20, BasicToken {
      */
     function increaseApproval (address _spender, uint _addedValue) public returns (bool success) {
         allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
@@ -132,28 +132,32 @@ contract StandardToken is ERC20, BasicToken {
         } else {
             allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
         }
-        Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
 }
 
+/** @title Owned */
 contract Owned {
-    address public owner;
+    address payable public  owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    function Owned() public {
+    /**
+     * @dev Owned constructor
+     */
+    constructor() public {
         owner = msg.sender;
     }
 
     /**
-    * @dev Allows the current owner to transfer control of the contract to a newOwner.
-    * @param newOwner The address to transfer ownership to.
-    */
-    function transferOwnership(address newOwner) public onlyOwner {
+     * @dev Allows the current owner to transfer control of the contract to a newOwner.
+     * @param newOwner The address to transfer ownership to.
+     */
+    function transferOwnership(address payable newOwner) onlyOwner public {
         require(newOwner != address(0));
-        OwnershipTransferred(owner, newOwner);
+        emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
 
@@ -163,83 +167,29 @@ contract Owned {
     }
 }
 
+
+/** @title FourArt Token */
 contract FourArt is StandardToken, Owned {
+    FourArt public associatedToken;
     string public constant name = "4ArtCoin";
     string public constant symbol = "4Art";
     uint8 public constant decimals = 18;
     uint256 public sellPrice = 0; // eth
     uint256 public buyPrice = 0; // eth
-    mapping (address => bool) private SubFounders;
-    mapping (address => bool) private TeamAdviserPartner;
 
-    //FounderAddress1 is main founder
-    address private FounderAddress1;
-    address private FounderAddress2;
-    address private FounderAddress3;
-    address private FounderAddress4;
-    address private FounderAddress5;
-    address private teamAddress;
-    address private adviserAddress;
-    address private partnershipAddress;
-    address private bountyAddress;
-    address private affiliateAddress;
-    address private miscAddress;
-
-    function FourArt(
-        address _founderAddress1,
-        address _founderAddress2,
-        address _founderAddress3,
-        address _founderAddress4,
-        address _founderAddress5,
-        address _teamAddress,
-        address _adviserAddress,
-        address _partnershipAddress,
-        address _bountyAddress,
-        address _affiliateAddress,
-        address _miscAddress
-        )  {
-        totalSupply = 6500000000e18;
-        //assign initial tokens for sale to contracter
-        balances[msg.sender] = 4354000000e18;
-        FounderAddress1 = _founderAddress1;
-        FounderAddress2 = _founderAddress2;
-        FounderAddress3 = _founderAddress3;
-        FounderAddress4 = _founderAddress4;
-        FounderAddress5 = _founderAddress5;
-        teamAddress = _teamAddress;
-        adviserAddress =  _adviserAddress;
-        partnershipAddress = _partnershipAddress;
-        bountyAddress = _bountyAddress;
-        affiliateAddress = _affiliateAddress;
-        miscAddress =  _miscAddress;
-
-        //Assign tokens to the addresses at contract deployment
-        balances[FounderAddress1] = 1390000000e18;
-        balances[FounderAddress2] = 27500000e18;
-        balances[FounderAddress3] = 27500000e18;
-        balances[FounderAddress4] = 27500000e18;
-        balances[FounderAddress5] = 27500000e18;
-        balances[teamAddress] = 39000000e18;
-        balances[adviserAddress] = 39000000e18;
-        balances[partnershipAddress] = 39000000e18;
-        balances[bountyAddress] = 65000000e18;
-        balances[affiliateAddress] = 364000000e18;
-        balances[miscAddress] = 100000000e18;
-
-        //checks for tokens transfer
-        SubFounders[FounderAddress2] = true;
-        SubFounders[FounderAddress3] = true;
-        SubFounders[FounderAddress4] = true;
-        SubFounders[FounderAddress5] = true;
-        TeamAdviserPartner[teamAddress] = true;
-        TeamAdviserPartner[adviserAddress] = true;
-        TeamAdviserPartner[partnershipAddress] = true;
+    /**
+     * @dev FourArt constructor call on contract deployment
+     */
+    constructor(FourArt _address) public  {
+        associatedToken = _address;
+        totalSupply = 3508500000e18;
+        balances[msg.sender] = totalSupply;
     }
+
 
     // desposit funds to smart contract
-    function () public payable {
-    }
-
+    function () external payable {}
+    
     // Set buy and sell price of 1 token in eth.
     function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner public {
         sellPrice = newSellPrice;
@@ -248,99 +198,82 @@ contract FourArt is StandardToken, Owned {
 
     // @notice Buy tokens from contract by sending ether
     function buy() payable public {
-        require(now > 1543536000); // seconds since 01.01.1970 to 30.11.2018 (18:00:00 o'clock GMT)
         uint amount = msg.value.div(buyPrice);       // calculates the amount
         _transfer(owner, msg.sender, amount);   // makes the transfers
     }
 
     // @notice Sell `amount` tokens to contract
     function sell(uint256 amount) public {
-        require(now > 1543536000); // seconds since 01.01.1970 to 30.11.2018 (18:00:00 o'clock GMT)
         require(amount > 0);
         require(balances[msg.sender] >= amount);
         uint256 requiredBalance = amount.mul(sellPrice);
-        require(this.balance >= requiredBalance);  // checks if the contract has enough ether to pay
-        balances[msg.sender] -= amount;
-        balances[owner] += amount;
-        Transfer(msg.sender, owner, amount);
+        require(address(this).balance >= requiredBalance);  // checks if the contract has enough ether to pay
+        
+        balances[msg.sender] = balances[msg.sender].sub(amount);
+        balances[owner] = balances[owner].add(amount);
+        emit Transfer(msg.sender, owner, amount); 
         msg.sender.transfer(requiredBalance);    // sends ether to the seller.
     }
-
+    
+    // for use of buy and sell methods
     function _transfer(address _from, address _to, uint _value) internal {
         // Prevent transfer to 0x0 address. Use burn() instead
-        require(_to != 0x0);
+       require(_to != address(0));
         // Check if the sender has enough
         require(balances[_from] >= _value);
         // Check for overflows
         require(balances[_to] + _value > balances[_to]);
-        // Subtract from the sender
-        balances[_from] -= _value;
-        // Add the same to the recipient
-        balances[_to] += _value;
-        Transfer(_from, _to, _value);
+        
+        // SafeMath.sub will throw if there is not enough balance.
+        balances[_from] = balances[_from].sub(_value);
+        balances[_to] = balances[_to].add(_value);
+        emit Transfer(_from, _to, _value);
     }
-
+    
     // @dev if owner wants to transfer contract ether balance to own account.
     function transferBalanceToOwner(uint256 _value) public onlyOwner {
-        require(_value <= this.balance);
+        require(_value <= address(this).balance);
         owner.transfer(_value);
     }
-
-    // @dev if someone wants to transfer tokens to other account.
-    function transferTokens(address _to, uint256 _tokens) lockTokenTransferBeforeStage4 TeamTransferConditions(_tokens, msg.sender)   public {
-        _transfer(msg.sender, _to, _tokens);
+    
+    /**
+    * @dev transfer token for a specified address
+    * @param _to The address to transfer to.
+    * @param _value The amount to be transferred.
+    */
+    function transfer(address _to, uint256 _value) public returns (bool) {
+        _transfer(msg.sender, _to, _value);
+        return true;
     }
-
-    // @dev Transfer tokens from one address to another
-    function transferFrom(address _from, address _to, uint256 _value) lockTokenTransferBeforeStage4 TeamTransferConditions(_value, _from)  public returns (bool) {
+    
+    
+    /**
+     * @dev Transfer from allowed address to other address
+     * @param _from from address
+     * @param _to to address
+     * @param _value number of token(s)
+     */
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(_to != address(0));
         require(_value <= balances[_from]);
-        require(_value <= allowed[_from][msg.sender]);
+        require(_value <= allowed[_from][_to]);
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
         allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
         return true;
     }
-
-    modifier lockTokenTransferBeforeStage4{
-        if(msg.sender != owner){
-           require(now > 1533513600); // Locking till stage 4 starting date (ICO).
-        }
-        _;
-    }
-
-    modifier TeamTransferConditions(uint256 _tokens,  address _address) {
-        if(SubFounders[_address]){
-            require(now > 1543536000);
-            if(now > 1543536000 && now < 1569628800){
-                //90% lock of total 27500000e18
-                isLocked(_tokens, 24750000e18, _address);
-            }
-            if(now > 1569628800 && now < 1601251200){
-               //50% lock of total 27500000e18
-               isLocked(_tokens, 13750000e18, _address);
-            }
-        }
-
-        if(TeamAdviserPartner[_address]){
-            require(now > 1543536000);
-            if(now > 1543536000 && now < 1569628800){
-                //85% lock of total 39000000e18
-                isLocked(_tokens, 33150000e18, _address);
-            }
-            if(now > 1569628800 && now < 1601251200){
-               //60% lock of total 39000000e18
-               isLocked(_tokens, 23400000e18, _address);
-            }
-        }
-        _;
-    }
-
-    // @dev if someone wants to transfer tokens to other account.
-    function isLocked(uint256 _value,uint256 remainingTokens, address _address)  internal returns (bool) {
-            uint256 remainingBalance = balances[_address].sub(_value);
-            require(remainingBalance >= remainingTokens);
-            return true;
+    
+    /**
+     * @dev get coins against 4Art ICO coins
+     * @param _amount number of token(s)
+     */
+    function convertIcoCoins(uint256 _amount) public {   
+        // msg.sender mush approve tokens for this contract using Approve()
+        // method of 4ArtCoin
+        // Same number of Trading coins will be given to msg.sender
+        
+        require(associatedToken.transferFrom(msg.sender, address(this), _amount));
+        _transfer(owner, msg.sender, _amount);   // makes the transfer of trading coins
     }
 }
